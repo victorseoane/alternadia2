@@ -1,8 +1,12 @@
-const {createUser,addActivity} = require("../lib/user.js") //Ruta al fichero a importar
+const {createUser,addActivity,saveUser} = require("../lib/user.js")
+const db = require("../lib/db.js") 
+const path = require('path')
+const fs = require('fs')
 
-function checkErrorCreateUser(usName,usFirstName,usEmail,usPhone,errorMsg){
+
+function checkErrorCreateUser(usName,usSurname,usEmail,usPhone,errorMsg){
     expect(()=>{
-        createUser(usName,usFirstName,usEmail,usPhone)
+        createUser(usName,usSurname,usEmail,usPhone)
     }).toThrow(errorMsg)
 }
 
@@ -12,48 +16,70 @@ function checkErrorAddActivity(user,actName,actDate,actHour,errorMsg){
     }).toThrow(errorMsg)
 }
 
-const userNameTest = "vseoane"
-const nameTest = "Victor"
-const firstNameTest = "Seoane"
-const emailTest = "victors@alternaenergetica.com"
-const phoneTest = "605968538"
-const nullNameTest = null
+const usernameTest = ['vseoane','elenam']
+const nameTest= ['Victor','Elena']
+const surnameTest= ['Seoane','Marco']
+const emailTest= ['victors@alternaenergetica.com','elenam@alternaenergetica.com']
+const phoneTest = ['605968538','654978975']
+
+const user1 = createUser(usernameTest[0],nameTest[0],surnameTest[0],emailTest[0],phoneTest[0])
+const user2 = createUser(usernameTest[1],nameTest[1],surnameTest[1],emailTest[1],phoneTest[1])
+
+const nullnameTest = null
 const nullUser = null
 describe("createUser function ",()=>{
 
     it("works for simple case",()=>{
-        const user = createUser(userNameTest,nameTest,firstNameTest,emailTest,phoneTest)
-        const expectedUser = {userName:userNameTest,name:nameTest,firstName:firstNameTest,email:emailTest,phone:phoneTest,activityList:[]}
-        expect(user).toEqual(expectedUser)
+        const expectedUser = {userName:usernameTest[0],name:nameTest[0],surname:surnameTest[0],email:emailTest[0],phone:phoneTest[0],activityList:[]}
+        expect(user1).toEqual(expectedUser)
     })
     it("throws error for wrong parameters",()=>{
-        checkErrorCreateUser(nullNameTest,firstNameTest,emailTest,phoneTest,"Wrong parameters for the user")
+        checkErrorCreateUser(nullnameTest,surnameTest[0],emailTest[0],phoneTest[0],"Wrong parameters for the user")
     })
 })
 
 describe("addActivity function ",()=>{
-    const user = createUser(userNameTest, nameTest,firstNameTest,emailTest,phoneTest)
-    const activityNameTest = "Work meeting"
+    const activitynameTest = "Work meeting"
     const activityDateTest = "23/07/2020"
     const activityHourTest = "11:30"
     it("works for simple case",()=>{
-        const userWithActivity = addActivity(user,activityNameTest,activityDateTest,activityHourTest)
-        const expectedUser = {userName:userNameTest, name:"Victor",firstName:"Seoane",email:"victors@alternaenergetica.com",phone:"605968538",activityList:[{name:"Work meeting",date:"23/07/2020",hour:"11:30"}]}
+        const userWithActivity = addActivity(user1,activitynameTest,activityDateTest,activityHourTest)
+        const expectedUser = {...user1,activityList:[{name:"Work meeting",date:"23/07/2020",hour:"11:30"}]}
         expect(userWithActivity).toEqual(expectedUser)
     })
     it("throws error for null user",()=>{
-        checkErrorAddActivity(nullUser,activityNameTest,activityDateTest,activityHourTest,"User is not defined")
+        checkErrorAddActivity(nullUser,activitynameTest,activityDateTest,activityHourTest,"User is not defined")
     })
     it("throws error for wrong parameters of the activity",()=>{
-        checkErrorAddActivity(user,activityNameTest,null,activityHourTest,"Wrong parameters for the new activity")
+        checkErrorAddActivity(user1,activitynameTest,null,activityHourTest,"Wrong parameters for the new activity")
     })
 })
 
-/*describe("saveUser function ",()=>{
+describe("saveUser function ",()=>{
+    const pathTest = path.resolve(__dirname,'../db/emptyExample.json')
 
-    it("works for simple case",()=>{
-        const readString = saveUser(userNameTest,nameTest,firstNameTest,emailTest,phoneTest)
-        console.log(readString)
+    it("works when DB is empty",()=>{
+        saveUser(pathTest,user1)
+        const readUser = db.load(pathTest)
+        expect(readUser[usernameTest[0]]).toEqual(user1)
+        fs.unlinkSync(pathTest)
     })
 
-})*/
+    it("works with multiple users",()=>{
+        saveUser(pathTest,user1)
+        saveUser(pathTest,user2)
+        const readUser = db.load(pathTest)
+        expect(readUser[usernameTest[0]]).toEqual(user1)
+        expect(readUser[usernameTest[1]]).toEqual(user2)
+        fs.unlinkSync(pathTest)
+    })
+
+    it("throws error when user is repeated",()=>{
+        expect(()=>{
+            saveUser(pathTest,user1)
+            saveUser(pathTest,user1)
+        }).toThrow('Duplicated user')
+        fs.unlinkSync(pathTest)
+    })
+
+})

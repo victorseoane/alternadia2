@@ -21,7 +21,7 @@ describe('write function ',()=>{
         expect(loadedDb).toEqual({})
         
         const user = createUser("username2","Pepe","Garcia","v@gmail.com","+346863423")
-        db.write(user,pathTest2,loadedDb)
+        db.write(user,pathTest2)
         const loadedDb2 = db.load(pathTest2)
         expect(loadedDb2).toEqual(user)
         

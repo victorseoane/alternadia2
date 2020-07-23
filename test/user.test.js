@@ -59,15 +59,15 @@ describe("saveUser function ",()=>{
     const pathTest = path.resolve(__dirname,'../db/emptyExample.json')
 
     it("works when DB is empty",()=>{
-        saveUser(pathTest,user1)
+        saveUser(pathTest,user1,true)
         const readUser = db.load(pathTest)
         expect(readUser[usernameTest[0]]).toEqual(user1)
         fs.unlinkSync(pathTest)
     })
 
     it("works with multiple users",()=>{
-        saveUser(pathTest,user1)
-        saveUser(pathTest,user2)
+        saveUser(pathTest,user1,true)
+        saveUser(pathTest,user2,true)
         const readUser = db.load(pathTest)
         expect(readUser[usernameTest[0]]).toEqual(user1)
         expect(readUser[usernameTest[1]]).toEqual(user2)
@@ -76,8 +76,8 @@ describe("saveUser function ",()=>{
 
     it("throws error when user is repeated",()=>{
         expect(()=>{
-            saveUser(pathTest,user1)
-            saveUser(pathTest,user1)
+            saveUser(pathTest,user1,true)
+            saveUser(pathTest,user1,true)
         }).toThrow('Duplicated user')
         fs.unlinkSync(pathTest)
     })

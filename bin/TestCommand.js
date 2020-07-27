@@ -1,6 +1,6 @@
 const stdio = require('stdio')
 const path = require('path')
-const {createUser, saveUser, addActivity } = require('../lib/user')
+const {createUser, saveUser, addActivity,getUsers, getUser} = require('../lib/user')
 const db = require('../lib/db.js')
 const pathDB = path.resolve(__dirname,'../db/users.json')
 
@@ -21,6 +21,30 @@ chooseOption().then((res)=>{
             console.log(error)
         })
     }
+    if(res=='3'){
+        askUser().then((username)=>{
+            let user
+            try{
+                user = getUser(pathDB,username)
+            }catch(e){
+                console.log('User does not exist')
+                return
+            }
+            const row = {...user,activityList:JSON.stringify(user.activityList)}
+            console.table([row])
+        }).catch((error)=>{
+            console.log(error)
+        })
+    }
+    if(res=='4'){
+        const allUsers = user = getUsers(pathDB)
+        let myTable = []
+        for(let eachUser in allUsers){
+            let row = {...user[eachUser],activityList:JSON.stringify(user[eachUser].activityList)}
+            myTable.push(row)
+        }
+        console.table(myTable)
+    }
 
 }).catch((error)=>{
     console.log(error)
@@ -29,7 +53,11 @@ chooseOption().then((res)=>{
 
 
 async function chooseOption(){
-    const answer = await stdio.ask('Choose an option:\n1. Add new user \n2.Add activity to existing user\n')
+    const answer = await stdio.ask('Choose an option:\n1. Add new user \n2.Add activity to existing user\n3. Get user\n4. Get all the users\n')
+    return answer
+}
+async function askUser(){
+    const answer = await stdio.ask('Introduce the username')
     return answer
 }
 async function gatherUserData(){
